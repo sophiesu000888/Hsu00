@@ -236,9 +236,6 @@
     text-align:center;
     vertical-align:middle;
   }
-  tbody td.align-right{
-    text-align:right;
-  }
 
   .cell{
     display:flex;
@@ -254,10 +251,6 @@
     overflow-wrap:break-word;
     line-height:1.35;
     margin:0 auto;
-  }
-  td.align-right .cell{
-    justify-content:flex-end;
-    margin:0 0 0 auto;
   }
   .cell:focus{
     background:var(--bg);
@@ -374,12 +367,13 @@
     padding:9px 8px;
     font-size:11.5px;
     color:var(--ink-dim);
-    text-align:right;
+    text-align:center;
     display:block;
   }
   .totals-val{
     padding:9px 8px;
     font-size:12.5px;
+    text-align:center;
     display:block;
   }
   .totals-val.pos{ color:var(--up); }
@@ -520,9 +514,17 @@
   #loginScreen .login-head{
     background:var(--accent); padding:26px 24px 20px; text-align:center;
   }
-  #loginScreen .login-head .emoji{font-size:34px;margin-bottom:6px;}
-  #loginScreen .login-head .t1{font-size:19px;font-weight:700;color:#fff;letter-spacing:-0.01em;}
-  #loginScreen .login-head .t2{font-size:17px;color:#fff;margin-top:4px;font-family:'Luckiest Guy', var(--mono);letter-spacing:.03em;}
+  #loginScreen .login-head .brand-line{
+    font-size:22px;
+    color:#fff;
+    font-family:'Luckiest Guy', var(--mono);
+    letter-spacing:.03em;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+  }
+  #loginScreen .login-head .brand-line .emoji{font-size:24px;}
   .login-tabs{display:flex;border-bottom:1px solid var(--line);}
   .login-tab{
     flex:1;padding:12px;border:none;background:var(--panel);color:var(--ink-dim);
@@ -556,9 +558,7 @@
 <div id="loginScreen" style="display:none">
   <div class="login-card">
     <div class="login-head">
-      <div class="emoji">📈</div>
-      <div class="t1">損益紀錄</div>
-      <div class="t2">GO RICH</div>
+      <div class="brand-line">GO RICH<span class="emoji">📈</span></div>
     </div>
     <div class="login-tabs">
       <button id="tabLogin" class="login-tab active">登入</button>
@@ -1247,9 +1247,6 @@ document.getElementById('btnLogout').addEventListener('click', async()=>{
 
       COLUMNS.forEach((col) => {
         const td = document.createElement('td');
-        if(col.id === 'point' || col.id === 'pnl' || col.id === 'amount' || col.id === 'fee'){
-          td.classList.add('align-right');
-        }
 
         if(col.type === 'date'){
           const wrap = document.createElement('div');
@@ -1386,9 +1383,6 @@ document.getElementById('btnLogout').addEventListener('click', async()=>{
 
     COLUMNS.forEach((col) => {
       const td = document.createElement('td');
-      if(col.id === 'point' || col.id === 'pnl' || col.id === 'amount' || col.id === 'fee'){
-        td.classList.add('align-right');
-      }
       if(col.id === 'point'){
         const span = document.createElement('span');
         span.className = 'totals-label';
@@ -1530,12 +1524,8 @@ document.getElementById('btnLogout').addEventListener('click', async()=>{
         row.eachCell({ includeEmpty:true }, cell => {
           cell.fill = fill;
           cell.border = BORDERS;
-          cell.alignment = { vertical:'middle', horizontal: (cell.col === 4 || cell.col === 6) ? 'center' : 'center' };
+          cell.alignment = { vertical:'middle', horizontal:'center' };
         });
-        row.getCell('point').alignment = { vertical:'middle', horizontal:'right' };
-        row.getCell('pnl').alignment = { vertical:'middle', horizontal:'right' };
-        row.getCell('amount').alignment = { vertical:'middle', horizontal:'right' };
-        row.getCell('fee').alignment = { vertical:'middle', horizontal:'right' };
       });
 
       const totalRow = ws.addRow({
@@ -1550,10 +1540,6 @@ document.getElementById('btnLogout').addEventListener('click', async()=>{
         cell.border = BORDERS;
         cell.alignment = { vertical:'middle', horizontal:'center' };
       });
-      totalRow.getCell('point').alignment = { vertical:'middle', horizontal:'right' };
-      totalRow.getCell('pnl').alignment = { vertical:'middle', horizontal:'right' };
-      totalRow.getCell('amount').alignment = { vertical:'middle', horizontal:'right' };
-      totalRow.getCell('fee').alignment = { vertical:'middle', horizontal:'right' };
     });
 
     const stamp = new Date().toISOString().slice(0,10);
