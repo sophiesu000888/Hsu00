@@ -539,6 +539,36 @@
   }
   .login-panel input[type="password"]{font-family:var(--mono);}
   .login-panel input:focus{border-color:var(--accent);}
+  .email-group{
+    display:flex;
+    align-items:center;
+    width:100%;
+    border-radius:8px;
+    border:1.5px solid var(--line);
+    background:var(--bg);
+    overflow:hidden;
+  }
+  .email-group:focus-within{border-color:var(--accent);}
+  .email-group input{
+    flex:1;
+    min-width:0;
+    padding:11px 4px 11px 13px;
+    border:none;
+    border-radius:0;
+    background:transparent;
+    font-size:14.5px;
+    font-family:var(--sans);
+    outline:none;
+    color:var(--ink);
+  }
+  .email-group .email-suffix{
+    flex-shrink:0;
+    padding:11px 13px 11px 2px;
+    font-size:14.5px;
+    font-family:var(--sans);
+    color:var(--ink-dim);
+    white-space:nowrap;
+  }
   .login-panel button.primary{width:100%;padding:12px;border-radius:8px;font-size:14.5px;margin-top:2px;}
   .login-err{font-size:12.5px;color:var(--accent);min-height:16px;text-align:center;font-family:var(--sans);}
   .login-forgot{background:none;border:none;color:var(--ink-dim);font-size:12.5px;cursor:pointer;text-decoration:underline;padding:0;font-family:var(--sans);}
@@ -565,7 +595,10 @@
       <button id="tabRegister" class="login-tab">註冊帳號</button>
     </div>
     <div id="panelLogin" class="login-panel">
-      <input id="loginEmail" type="email" placeholder="請輸入 Email" autocomplete="email">
+      <div class="email-group">
+        <input id="loginEmail" type="text" placeholder="帳號" autocomplete="username" inputmode="email">
+        <span class="email-suffix">@gmail.com</span>
+      </div>
       <input id="loginPwd" type="password" placeholder="密碼" autocomplete="current-password">
       <button id="btnLogin" class="primary">進入</button>
       <div id="loginError" class="login-err"></div>
@@ -573,7 +606,10 @@
     </div>
     <div id="panelRegister" class="login-panel" style="display:none">
       <input id="regName" type="text" placeholder="你的名稱（例：小明）">
-      <input id="regEmail" type="email" placeholder="請輸入 Email" autocomplete="email">
+      <div class="email-group">
+        <input id="regEmail" type="text" placeholder="帳號" autocomplete="username" inputmode="email">
+        <span class="email-suffix">@gmail.com</span>
+      </div>
       <input id="regPwd" type="password" placeholder="設定密碼（至少6位）" autocomplete="new-password">
       <button id="btnRegister" class="primary">建立帳號</button>
       <div id="registerError" class="login-err"></div>
@@ -664,22 +700,12 @@ const auth = getAuth(fbApp);
 function pnlDocRef(uid){ return doc(db, 'users', uid, 'pnl', 'state'); }
 let currentUid = null;
 
-// ── Email 欄位預設 @gmail.com（游標停在最前面，少打幾個字）────
-function attachGmailDefault(input){
-  input.addEventListener('focus', () => {
-    if(input.value.trim() === ''){
-      input.value = '@gmail.com';
-      requestAnimationFrame(() => input.setSelectionRange(0, 0));
-    }
-  });
-  input.addEventListener('blur', () => {
-    if(input.value === '@gmail.com'){
-      input.value = '';
-    }
-  });
+// ── Email 帳號欄位：使用者只需輸入帳號，@gmail.com 固定於後方 ────
+function getFullEmail(input){
+  const v = input.value.trim();
+  if(!v) return '';
+  return v.includes('@') ? v : v + '@gmail.com';
 }
-attachGmailDefault(document.getElementById('loginEmail'));
-attachGmailDefault(document.getElementById('regEmail'));
 
 // ── TAB 切換 ──────────────────────────────────────────────
 function switchLoginTab(tab){
@@ -706,11 +732,11 @@ function hideLoginScreen(){
 }
 
 async function tryLogin(){
-  const email = document.getElementById('loginEmail').value.trim();
+  const email = getFullEmail(document.getElementById('loginEmail'));
   const pwd = document.getElementById('loginPwd').value;
   const errEl = document.getElementById('loginError');
   const btn = document.getElementById('btnLogin');
-  if(!email||!pwd){ errEl.textContent='請填寫 Email 和密碼'; return; }
+  if(!email||!pwd){ errEl.textContent='請填寫帳號和密碼'; return; }
   btn.textContent='驗證中…'; btn.disabled=true; errEl.textContent='';
   try{
     await signInWithEmailAndPassword(auth, email, pwd);
@@ -727,12 +753,12 @@ async function tryLogin(){
 
 async function tryRegister(){
   const name = document.getElementById('regName').value.trim();
-  const email = document.getElementById('regEmail').value.trim();
+  const email = getFullEmail(document.getElementById('regEmail'));
   const pwd = document.getElementById('regPwd').value;
   const errEl = document.getElementById('registerError');
   const btn = document.getElementById('btnRegister');
   if(!name){ errEl.textContent='請輸入你的名稱'; return; }
-  if(!email){ errEl.textContent='請輸入 Email'; return; }
+  if(!email){ errEl.textContent='請輸入帳號'; return; }
   if(!pwd||pwd.length<6){ errEl.textContent='密碼至少需要 6 位'; return; }
   btn.textContent='建立中…'; btn.disabled=true; errEl.textContent='';
   try{
@@ -749,9 +775,9 @@ async function tryRegister(){
 }
 
 document.getElementById('btnForgotPwd').addEventListener('click', async()=>{
-  const email = document.getElementById('loginEmail').value.trim();
+  const email = getFullEmail(document.getElementById('loginEmail'));
   const errEl = document.getElementById('loginError');
-  if(!email){ errEl.style.color='var(--accent)'; errEl.textContent='請先填入 Email，再點忘記密碼'; return; }
+  if(!email){ errEl.style.color='var(--accent)'; errEl.textContent='請先填入帳號，再點忘記密碼'; return; }
   try{
     await sendPasswordResetEmail(auth, email);
     errEl.style.color='var(--down)';
