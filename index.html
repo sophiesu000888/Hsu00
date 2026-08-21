@@ -569,6 +569,34 @@
     color:var(--ink-dim);
     white-space:nowrap;
   }
+  .pwd-group{
+    position:relative;
+    width:100%;
+  }
+  .pwd-group input{
+    width:100%;
+    padding:11px 42px 11px 13px !important;
+  }
+  .pwd-toggle{
+    position:absolute;
+    top:50%;
+    right:4px;
+    transform:translateY(-50%);
+    width:34px;
+    height:34px;
+    padding:0;
+    border:none;
+    background:none;
+    font-size:16px;
+    line-height:1;
+    color:var(--ink-dim);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:.55;
+  }
+  .pwd-toggle.active{opacity:1;color:var(--accent);}
   .login-panel button.primary{width:100%;padding:12px;border-radius:8px;font-size:14.5px;margin-top:2px;}
   .remember-row{
     display:flex;
@@ -617,7 +645,10 @@
         <input id="loginEmail" type="text" placeholder="帳號" autocomplete="username" inputmode="email">
         <span class="email-suffix">@gmail.com</span>
       </div>
-      <input id="loginPwd" type="password" placeholder="密碼" autocomplete="current-password">
+      <div class="pwd-group">
+        <input id="loginPwd" type="password" placeholder="密碼" autocomplete="current-password">
+        <button type="button" class="pwd-toggle" id="loginPwdToggle" aria-label="顯示密碼">👁</button>
+      </div>
       <label class="remember-row">
         <input type="checkbox" id="rememberAccount">
         <span>記住帳號</span>
@@ -632,7 +663,10 @@
         <input id="regEmail" type="text" placeholder="帳號" autocomplete="username" inputmode="email">
         <span class="email-suffix">@gmail.com</span>
       </div>
-      <input id="regPwd" type="password" placeholder="設定密碼（至少6位）" autocomplete="new-password">
+      <div class="pwd-group">
+        <input id="regPwd" type="password" placeholder="設定密碼（至少6位）" autocomplete="new-password">
+        <button type="button" class="pwd-toggle" id="regPwdToggle" aria-label="顯示密碼">👁</button>
+      </div>
       <button id="btnRegister" class="primary">建立帳號</button>
       <div id="registerError" class="login-err"></div>
     </div>
@@ -751,6 +785,21 @@ function persistRememberedAccount(){
     }
   }catch(e){ /* localStorage 不可用時安靜略過 */ }
 }
+
+// ── 顯示／隱藏密碼 ─────────────────────────────────────────
+function attachPwdToggle(inputId, btnId){
+  const input = document.getElementById(inputId);
+  const btn = document.getElementById(btnId);
+  btn.addEventListener('click', () => {
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    btn.textContent = showing ? '👁' : '🙈';
+    btn.classList.toggle('active', !showing);
+    btn.setAttribute('aria-label', showing ? '顯示密碼' : '隱藏密碼');
+  });
+}
+attachPwdToggle('loginPwd', 'loginPwdToggle');
+attachPwdToggle('regPwd', 'regPwdToggle');
 
 // ── TAB 切換 ──────────────────────────────────────────────
 function switchLoginTab(tab){
