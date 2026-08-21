@@ -664,6 +664,23 @@ const auth = getAuth(fbApp);
 function pnlDocRef(uid){ return doc(db, 'users', uid, 'pnl', 'state'); }
 let currentUid = null;
 
+// ── Email 欄位預設 @gmail.com（游標停在最前面，少打幾個字）────
+function attachGmailDefault(input){
+  input.addEventListener('focus', () => {
+    if(input.value.trim() === ''){
+      input.value = '@gmail.com';
+      requestAnimationFrame(() => input.setSelectionRange(0, 0));
+    }
+  });
+  input.addEventListener('blur', () => {
+    if(input.value === '@gmail.com'){
+      input.value = '';
+    }
+  });
+}
+attachGmailDefault(document.getElementById('loginEmail'));
+attachGmailDefault(document.getElementById('regEmail'));
+
 // ── TAB 切換 ──────────────────────────────────────────────
 function switchLoginTab(tab){
   const isLogin = tab === 'login';
