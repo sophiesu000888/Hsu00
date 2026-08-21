@@ -558,7 +558,7 @@
     <div class="login-head">
       <div class="emoji">📈</div>
       <div class="t1">損益紀錄</div>
-      <div class="t2">GO RICH!</div>
+      <div class="t2">GO RICH</div>
     </div>
     <div class="login-tabs">
       <button id="tabLogin" class="login-tab active">登入</button>
@@ -591,7 +591,6 @@
 
   <div class="topbar">
     <div class="title-block">
-      <div class="eyebrow" id="eyebrowText" contenteditable="false" spellcheck="false"></div>
       <h1 id="headingText" contenteditable="false" spellcheck="false"></h1>
     </div>
 
@@ -795,13 +794,13 @@ document.getElementById('btnLogout').addEventListener('click', async()=>{
     return { key, rows };
   }
 
-  const DEFAULT_TITLES = { eyebrow: 'GO RICH!', heading: '損益紀錄' };
+  const DEFAULT_TITLES = { heading: '損益紀錄' };
 
   let state = {
     months: {},      // key -> { key, rows: [...] }
     order: [],        // array of keys, chronological
     activeKey: null,
-    titles: { eyebrow: DEFAULT_TITLES.eyebrow, heading: DEFAULT_TITLES.heading }
+    titles: { heading: DEFAULT_TITLES.heading }
   };
 
   function ensureMonth(key){
@@ -858,7 +857,7 @@ document.getElementById('btnLogout').addEventListener('click', async()=>{
     statusEl.textContent = '雲端讀取中…';
     statusEl.classList.remove('saved');
     // 重置為預設空白狀態（避免帳號切換時殘留上一位使用者的資料）
-    state = { months: {}, order: [], activeKey: null, titles: { eyebrow: DEFAULT_TITLES.eyebrow, heading: DEFAULT_TITLES.heading } };
+    state = { months: {}, order: [], activeKey: null, titles: { heading: DEFAULT_TITLES.heading } };
     try{
       const snap = await getDoc(pnlDocRef(currentUid));
       if(snap.exists() && snap.data().state){
@@ -883,11 +882,9 @@ document.getElementById('btnLogout').addEventListener('click', async()=>{
       state.activeKey = state.order[0];
     }
     if(!state.titles || typeof state.titles !== 'object'){
-      state.titles = { eyebrow: DEFAULT_TITLES.eyebrow, heading: DEFAULT_TITLES.heading };
+      state.titles = { heading: DEFAULT_TITLES.heading };
     }
-    if(!state.titles.eyebrow) state.titles.eyebrow = DEFAULT_TITLES.eyebrow;
     if(!state.titles.heading) state.titles.heading = DEFAULT_TITLES.heading;
-    if(state.titles.eyebrow === 'GO RICH') state.titles.eyebrow = DEFAULT_TITLES.eyebrow;
 
     state.order.forEach(k => {
       state.months[k].rows.forEach(ensureRowShape);
@@ -973,9 +970,25 @@ document.getElementById('btnLogout').addEventListener('click', async()=>{
       const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
       if(!existing.has(key)) candidates.push(key);
     }
+
+    // Default selection = the month right after the latest existing month page
+    let defaultKey = candidates[0] || monthKeyNow();
+    if(state.order.length){
+      const lastKey = state.order[state.order.length - 1];
+      const [ly, lm] = lastKey.split('-').map(Number);
+      const nd = new Date(ly, lm, 1); // lm is 1-indexed month, so this rolls to next month
+      const nextKey = nd.getFullYear() + '-' + String(nd.getMonth()+1).padStart(2,'0');
+      if(candidates.includes(nextKey)){
+        defaultKey = nextKey;
+      } else if(!existing.has(nextKey)){
+        candidates.unshift(nextKey);
+        defaultKey = nextKey;
+      }
+    }
+
     flow = {
       kind:'addMonth', step:1, totalSteps:2,
-      data:{ key: candidates[0] || monthKeyNow() },
+      data:{ key: defaultKey },
       beforeNext(){
         flow.data.key = monthSelectEl.value;
         return true;
@@ -1107,11 +1120,9 @@ document.getElementById('btnLogout').addEventListener('click', async()=>{
     });
   }
 
-  // ---------- Editable titles ----------
+  // ---------- Editable title ----------
   function renderTitles(){
-    const eyebrowEl = document.getElementById('eyebrowText');
     const headingEl = document.getElementById('headingText');
-    eyebrowEl.textContent = state.titles.eyebrow;
     headingEl.textContent = state.titles.heading;
     document.title = state.titles.heading;
   }
@@ -1158,7 +1169,6 @@ document.getElementById('btnLogout').addEventListener('click', async()=>{
     });
   }
 
-  setupEditableTitle(document.getElementById('eyebrowText'), 'eyebrow', DEFAULT_TITLES.eyebrow);
   setupEditableTitle(document.getElementById('headingText'), 'heading', DEFAULT_TITLES.heading);
 
   function renderMonthTabs(){
@@ -1454,8 +1464,10 @@ document.getElementById('btnLogout').addEventListener('click', async()=>{
     const TOTAL_FILL  = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFF3C6CB' } };
     const THIN_BORDER = { style:'thin', color:{ argb:'FFECDFE0' } };
     const BORDERS = { top:THIN_BORDER, bottom:THIN_BORDER, left:THIN_BORDER, right:THIN_BORDER };
-    const NUM_FMT = '#,##0.00;[red]-#,##0.00';
-    const AMOUNT_FMT = '"$"#,##0.00;[red]-"$"#,##0.00';
+    // "#,##0.##" style formats: whole numbers show no decimals, values with
+    // fractional parts show only the digits actually present (no forced .00).
+    const NUM_FMT = '#,##0.##;[red]-#,##0.##';
+    const AMOUNT_FMT = '"$"#,##0.##;[red]-"$"#,##0.##';
 
     const usedNames = new Set();
 
@@ -1589,9 +1601,8 @@ document.getElementById('btnLogout').addEventListener('click', async()=>{
       if(!state.activeKey || !state.months[state.activeKey]) state.activeKey = state.order[0];
       state.order.forEach(k => { if(state.months[k]) state.months[k].rows.forEach(ensureRowShape); });
       if(!state.titles || typeof state.titles !== 'object'){
-        state.titles = { eyebrow: DEFAULT_TITLES.eyebrow, heading: DEFAULT_TITLES.heading };
+        state.titles = { heading: DEFAULT_TITLES.heading };
       }
-      if(!state.titles.eyebrow) state.titles.eyebrow = DEFAULT_TITLES.eyebrow;
       if(!state.titles.heading) state.titles.heading = DEFAULT_TITLES.heading;
       renderTitles();
       render();
